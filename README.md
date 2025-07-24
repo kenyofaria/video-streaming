@@ -13,4 +13,8 @@ production environment.
 No!! Just putting this project running in a simple infrastructure it is not possible to handle thousands of simultaneous
 access.
 
+### Heads up
+
+Create the videos folder under static resources and put your **.mp4** files over there.
+
 
