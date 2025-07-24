@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Streaming Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .main-content {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        .video-section {
+            flex: 2;
+            min-width: 0;
+        }
+
+        .sidebar {
+            flex: 1;
+            min-width: 300px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        video {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        .current-video-label {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            font-weight: 500;
+            color: #007bff;
+            display: inline-block;
+            min-width: 200px;
+            word-break: break-word;
+        }
+
+        .current-video-label.no-video {
+            color: #6c757d;
+            border-color: #6c757d;
+            font-style: italic;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .video-list {
+            margin-top: 15px;
+        }
+
+        .video-list h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #495057;
+            font-size: 18px;
+        }
+
+        .video-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+        }
+
+        .video-list li {
+            padding: 12px 15px;
+            margin: 0;
+            background: white;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .video-list li:last-child {
+            border-bottom: none;
+        }
+
+        .video-list li:hover {
+            background: #f8f9fa;
+            transform: translateX(2px);
+        }
+
+        .video-list li.selected {
+            background: #007bff;
+            color: white;
+        }
+
+        .video-list li.selected:hover {
+            background: #0056b3;
+        }
+
+        .video-name {
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .video-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #28a745;
+            color: white;
+            white-space: nowrap;
+            margin-left: 10px;
+        }
+
+        .video-status.loading {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .no-videos {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎬 Video Streaming Service</h1>
+
+    <div class="main-content">
+        <!-- Video Player Section -->
+        <div class="video-section">
+            <video id="videoPlayer" controls preload="metadata">
+                <source id="videoSource" src="" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+
+            <!-- Custom Controls -->
+            <div class="controls">
+                <span id="currentVideoLabel" class="current-video-label no-video">No video selected</span>
+                <button onclick="seekTo(-30)">⏪ -30s</button>
+                <button onclick="seekTo(-10)">⏪ -10s</button>
+                <button onclick="seekTo(10)">⏩ +10s</button>
+                <button onclick="seekTo(30)">⏩ +30s</button>
+            </div>
+
+            <!-- Video Information Section -->
+            <div class="info-section">
+                <h3>Video Information</h3>
+                <div id="videoInfo">
+                    <p>Pick a video to see information here...</p>
+                </div>
+            </div>
+        </div>
+        <!-- Sidebar with Video List -->
+        <div class="sidebar">
+            <div class="video-list">
+                <h3>📁 Available Videos</h3>
+                <div id="videoListStatus" class="loading-message">Loading videos...</div>
+                <ul id="videoUL" style="display: none;"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Messages (displayed at the bottom) -->
+    <div id="statusMessage" class="status"></div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8080/api/videos';
+    const videoPlayer = document.getElementById('videoPlayer');
+    const videoSource = document.getElementById('videoSource');
+    let currentVideoFileName = '';
+
+    // Load video from current selection
+    function loadVideo() {
+        if (!currentVideoFileName) {
+            showStatus('Please select a video from the list first', 'error');
+            return;
+        }
+
+        const videoUrl = `${API_BASE}/stream/${encodeURIComponent(currentVideoFileName)}`;
+        videoSource.src = videoUrl;
+        videoPlayer.load();
+
+        showStatus(`Loading video: ${currentVideoFileName}`, 'success');
+
+        // Update the list selection
+        updateSelectedVideo();
+    }
+
+    // Update current video label
+    function updateCurrentVideoLabel(fileName) {
+        const label = document.getElementById('currentVideoLabel');
+        if (fileName) {
+            label.textContent = fileName;
+            label.className = 'current-video-label';
+            currentVideoFileName = fileName;
+        } else {
+            label.textContent = 'No video selected';
+            label.className = 'current-video-label no-video';
+            currentVideoFileName = '';
+        }
+    }
+
+    // Seek relative to current position
+    function seekTo(seconds) {
+        if (videoPlayer.duration) {
+            const newTime = Math.max(0, Math.min(videoPlayer.currentTime + seconds, videoPlayer.duration));
+            videoPlayer.currentTime = newTime;
+            showStatus(`Seeked ${seconds > 0 ? '+' : ''}${seconds}s to ${formatTime(newTime)}`, 'success');
+        } else {
+            showStatus('Video not loaded or no duration available', 'error');
+        }
+    }
+
+    // Get video information
+    async function getVideoInfo() {
+        if (!currentVideoFileName) {
+            showStatus('Please select a video first', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/info/${encodeURIComponent(currentVideoFileName)}`);
+            if (response.ok) {
+                const info = await response.json();
+                displayVideoInfo(info);
+            } else if (response.status === 404) {
+                showStatus('Video not found', 'error');
+            } else {
+                showStatus('Error getting video info', 'error');
+            }
+        } catch (error) {
+            showStatus('Network error: ' + error.message, 'error');
+        }
+    }
+
+    // List available videos
+    async function listVideos() {
+        try {
+            const response = await fetch(`${API_BASE}/list`);
+            if (response.ok) {
+                const videos = await response.json();
+                displayVideoList(videos);
+            } else {
+                showStatus('Error listing videos', 'error');
+            }
+        } catch (error) {
+            showStatus('Network error: ' + error.message, 'error');
+        }
+    }
+
+    // Display video information
+    function displayVideoInfo(info) {
+        const videoInfoDiv = document.getElementById('videoInfo');
+        videoInfoDiv.innerHTML = `
+                <p><strong>File Name:</strong> ${info.fileName}</p>
+                <p><strong>File Size:</strong> ${info.fileSizeMB.toFixed(2)} MB (${info.fileSize.toLocaleString()} bytes)</p>
+                <p><strong>Content Type:</strong> ${info.contentType}</p>
+                <p><strong>Range Requests:</strong> ${info.supportsRangeRequests ? '✅ Supported' : '❌ Not Supported'}</p>
+                ${videoPlayer.duration ? `<p><strong>Duration:</strong> ${formatTime(videoPlayer.duration)}</p>` : ''}
+                ${videoPlayer.currentTime ? `<p><strong>Current Time:</strong> ${formatTime(videoPlayer.currentTime)}</p>` : ''}
+            `;
+    }
+
+    // Display video list
+    function displayVideoList(videos) {
+        const videoListStatus = document.getElementById('videoListStatus');
+        const videoUL = document.getElementById('videoUL');
+
+        if (videos.length === 0) {
+            videoListStatus.innerHTML = '<div class="no-videos">No videos found.<br>Place MP4 files in src/main/resources/videos/</div>';
+            videoUL.style.display = 'none';
+            return;
+        }
+
+        // Hide the loading message and show the list
+        videoListStatus.style.display = 'none';
+        videoUL.style.display = 'block';
+
+        // Clear existing list items
+        videoUL.innerHTML = '';
+
+        // Add each video as a list item
+        videos.forEach(video => {
+            const li = document.createElement('li');
+            li.setAttribute('data-video', video);
+
+            li.innerHTML = `
+                    <span class="video-name" title="${video}">${video}</span>
+                    <span class="video-status" id="status-${video}" style="display: none;">Ready</span>
+                `;
+
+            li.addEventListener('click', () => selectVideoFromList(video, li));
+            videoUL.appendChild(li);
+        });
+
+        // Highlight the currently selected video
+        updateSelectedVideo();
+    }
+
+    // Select video from list
+    function selectVideoFromList(fileName, listItem) {
+        updateCurrentVideoLabel(fileName);
+
+        // Update visual selection
+        const allItems = document.querySelectorAll('#videoUL li');
+        allItems.forEach(item => {
+            item.classList.remove('selected');
+            const status = item.querySelector('.video-status');
+            if (status) status.style.display = 'none';
+        });
+
+        listItem.classList.add('selected');
+        const status = listItem.querySelector('.video-status');
+        if (status) {
+            status.textContent = 'Loading...';
+            status.className = 'video-status loading';
+            status.style.display = 'inline';
+        }
+
+        // Automatically load the video and get its info
+        loadVideo();
+        setTimeout(() => getVideoInfo(), 1000);
+    }
+
+    // Update selected video highlighting
+    function updateSelectedVideo() {
+        const allItems = document.querySelectorAll('#videoUL li');
+
+        allItems.forEach(item => {
+            item.classList.remove('selected');
+            const status = item.querySelector('.video-status');
+            if (status) status.style.display = 'none';
+
+            if (item.getAttribute('data-video') === currentVideoFileName) {
+                item.classList.add('selected');
+                if (status) {
+                    status.textContent = 'Selected';
+                    status.className = 'video-status';
+                    status.style.display = 'inline';
+                }
+            }
+        });
+    }
+
+    // Show status message
+    function showStatus(message, type) {
+        const statusDiv = document.getElementById('statusMessage');
+        statusDiv.className = `status ${type}`;
+        statusDiv.textContent = message;
+        statusDiv.style.display = 'block';
+
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 3000);
+    }
+
+    // Format time in MM:SS format
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Video player event listeners
+    videoPlayer.addEventListener('loadstart', () => {
+        showStatus('Video loading started...', 'success');
+    });
+
+    videoPlayer.addEventListener('canplay', () => {
+        showStatus('Video ready to play', 'success');
+        // Update status in the list
+        const currentItem = document.querySelector(`#videoUL li[data-video="${currentVideoFileName}"]`);
+        if (currentItem) {
+            const status = currentItem.querySelector('.video-status');
+            if (status) {
+                status.textContent = 'Ready';
+                status.className = 'video-status';
+            }
+        }
+    });
+
+    videoPlayer.addEventListener('error', (e) => {
+        showStatus('Video error: ' + (e.message || 'Unknown error'), 'error');
+        // Update status in the list
+        const currentItem = document.querySelector(`#videoUL li[data-video="${currentVideoFileName}"]`);
+        if (currentItem) {
+            const status = currentItem.querySelector('.video-status');
+            if (status) {
+                status.textContent = 'Error';
+                status.className = 'video-status loading';
+            }
+        }
+    });
+
+    videoPlayer.addEventListener('seeking', () => {
+        showStatus('Seeking...', 'success');
+    });
+
+    videoPlayer.addEventListener('seeked', () => {
+        showStatus(`Seeked to ${formatTime(videoPlayer.currentTime)}`, 'success');
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        showStatus('Video streaming client ready!', 'success');
+        // Automatically load the video list when page loads
+        listVideos();
+    });
+</script>
+</body>
+</html>
