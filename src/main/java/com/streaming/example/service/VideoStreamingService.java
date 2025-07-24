@@ -1,7 +1,6 @@
 package com.streaming.example.service;
 
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -9,10 +8,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,12 +41,11 @@ public class VideoStreamingService {
                 // No range header - return full file
                 return createFullFileResponse(videoPath, fileSize);
             } else {
-                // Range request - return partial content
+                // Range request - return partial content. This path should be the most used
                 return createRangeResponse(videoPath, fileSize, rangeHeader);
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
